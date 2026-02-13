@@ -1,0 +1,20 @@
+@Viewport{ xmin:-3, xmax:3 }
+
+"randoms" {
+    R1=random(n)
+    R2=random(n)*2*pi
+}
+
+"variables" {
+    n=3000 @{ min:1, max:10000, step:1 }
+    a=0 @{ min: 0, max: 1 }
+}
+
+"visual" {
+    R1^((1+a)/2)*(cos(R2),sin(R2)) @{color: "#000", pointSize: 20, pointOpacity: 0.03}
+
+    "rings" {
+        r=([1...10]/10)^(1+a)
+        @{color: "#44B", lineWidth: 1, lineOpacity: 0.5}
+    }
+}

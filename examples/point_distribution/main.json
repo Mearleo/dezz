@@ -1,0 +1,108 @@
+{
+  "doNotMigrateMovablePointStyle": true,
+  "expressions": {
+    "list": [
+      {
+        "collapsed": "true",
+        "id": "1",
+        "title": "randoms",
+        "type": "folder"
+      },
+      {
+        "folderId": "1",
+        "id": "2",
+        "latex": "v_{R1}=\\operatorname{random}\\left(v_{n}\\right)",
+        "type": "expression"
+      },
+      {
+        "folderId": "1",
+        "id": "3",
+        "latex": "v_{R2}=\\operatorname{random}\\left(v_{n}\\right)\\cdot2\\cdot\\pi",
+        "type": "expression"
+      },
+      {
+        "collapsed": "true",
+        "id": "4",
+        "title": "variables",
+        "type": "folder"
+      },
+      {
+        "color": "#000",
+        "folderId": "4",
+        "id": "5",
+        "latex": "v_{n}=3000",
+        "slider": {
+          "hardMax": true,
+          "hardMin": true,
+          "max": "10000",
+          "min": "1",
+          "step": "1"
+        },
+        "type": "expression"
+      },
+      {
+        "color": "#000",
+        "folderId": "4",
+        "id": "6",
+        "latex": "v_{a}=0",
+        "slider": {
+          "hardMax": true,
+          "hardMin": true,
+          "max": "1",
+          "min": "0"
+        },
+        "type": "expression"
+      },
+      {
+        "collapsed": "true",
+        "id": "7",
+        "title": "visual",
+        "type": "folder"
+      },
+      {
+        "color": "#000",
+        "folderId": "7",
+        "id": "8",
+        "latex": "v_{R1}^{\\left(\\frac{\\left(1+v_{a}\\right)}{2}\\right)}\\cdot\\left(\\cos\\left(v_{R2}\\right),\\sin\\left(v_{R2}\\right)\\right)",
+        "pointOpacity": "0.03",
+        "pointSize": "20",
+        "type": "expression"
+      },
+      {
+        "collapsed": "true",
+        "id": "9",
+        "title": "visual ➤ rings",
+        "type": "folder"
+      },
+      {
+        "color": "#44B",
+        "folderId": "9",
+        "id": "10",
+        "latex": "r=\\left(\\frac{\\left[1...10\\right]}{10}\\right)^{\\left(1+v_{a}\\right)}",
+        "lineOpacity": "0.5",
+        "lineWidth": "1",
+        "type": "expression"
+      }
+    ]
+  },
+  "graph": {
+    "__v12ViewportLatexStash": {
+      "xmax": "3",
+      "xmin": "-3",
+      "ymax": "10",
+      "ymin": "-10"
+    },
+    "complex": false,
+    "viewport": {
+      "xmax": "3",
+      "xmin": "-3",
+      "ymax": "10",
+      "ymin": "-10"
+    },
+    "xAxisArrowMode": "POSITIVE",
+    "yAxisArrowMode": "POSITIVE"
+  },
+  "includeFunctionParametersInRandomSeed": true,
+  "randomSeed": "8bc6db9edd77f61bb7f2b455cd3ef0c5",
+  "version": 11
+}
