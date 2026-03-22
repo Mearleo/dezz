@@ -2,7 +2,7 @@ use std::{vec, collections::HashMap};
 
 use crate::ast::{ Expression, BinaryOp };
 
-pub fn resolve_action_block(items: Vec<Expression>) -> Vec<Expression> {
+pub fn resolve_action_block(args: Vec<Expression>, items: Vec<Expression>) -> Vec<Expression> {
     // vec of variables on the left side of Action
     let mut updated_vars: Vec<String> = Vec::new();
     // step: (updated variable)
@@ -27,21 +27,15 @@ pub fn resolve_action_block(items: Vec<Expression>) -> Vec<Expression> {
         steps.push(name.clone());
     }
 
-    // 
-    
-
-    // Expression::Call { ident: (), args: () }
-    // Expression::ActionCollection(())
-
-    let mut expressions = vec![create_first(&updated_vars, &steps)];
-    expressions.append(&mut create_helpers(&updated_vars, &steps, &items));
+    let mut expressions = vec![create_first(&updated_vars, &steps, &args)];
+    expressions.append(&mut create_helpers(&updated_vars, &steps, &items, &args));
 
     expressions
 
 }
 
 // create the action collection
-fn create_first(updated_vars: &Vec<String>, steps: &Vec<String>) -> Expression {
+fn create_first(updated_vars: &Vec<String>, steps: &Vec<String>, block_args: &Vec<Expression>) -> Expression {
     let actions = 
         updated_vars.iter()
         .map(|var| 
@@ -50,7 +44,12 @@ fn create_first(updated_vars: &Vec<String>, steps: &Vec<String>) -> Expression {
 
                 let last_update = get_last_update(var.clone(), &steps).unwrap();
                 let name = format!("{}{}", last_update, var);
-                let right = Expression::Call { ident: name, args: updated_vars.iter().map(|var| Expression::Ident(var.to_string())).collect() };
+
+                // arguments will be (..block_args, ..temp_args)
+                let mut args = block_args.to_vec();
+                args.extend(updated_vars.iter().map(|var| Expression::Ident(var.to_string())));
+
+                let right = Expression::Call { ident: name, args };
 
                 Expression::Binary { op: BinaryOp::Action, left: Box::new(left), right: Box::new(right)}
             }
@@ -65,14 +64,18 @@ fn helper_name(line: usize, name: &String) -> String {
 }
 
 // create the helper functions
-fn create_helpers(updated_vars: &Vec<String>, steps: &Vec<String>, items: &Vec<Expression>) -> Vec<Expression> {
+fn create_helpers(updated_vars: &Vec<String>, steps: &Vec<String>, items: &Vec<Expression>, block_args: &Vec<Expression>) -> Vec<Expression> {
     let mut helpers: Vec<Expression> = Vec::new();
 
     for (i, var) in steps.iter().enumerate() {
         let item = items[i].clone();
 
         let name = helper_name(i, var);
-        let left = Expression::Call { ident: name, args: updated_vars.iter().map(|var| Expression::Ident(var.to_string())).collect() };
+
+        let mut args = block_args.to_vec();
+        args.extend(updated_vars.iter().map(|var| Expression::Ident(var.to_string())));
+
+        let left = Expression::Call { ident: name, args };
 
         // Extract the right-hand side of an Action expression and rewrite it
         let right = match item {
@@ -86,13 +89,16 @@ fn create_helpers(updated_vars: &Vec<String>, steps: &Vec<String>, items: &Vec<E
                     }
                 }
 
+                let mut args = block_args.to_vec();
+                args.extend(updated_vars.iter().map(|var| Expression::Ident(var.clone())));
+
                 let tuples: Vec<(String, Expression)> = vars.iter().map(|var| {
                     let last_up = get_last_update_before(var.to_string(), i, steps);
                     let call_name = helper_name(last_up.unwrap(), &var);
 
                     (
                         var.clone(),
-                        Expression::Call { ident: call_name, args: updated_vars.iter().map(|var| Expression::Ident(var.clone())).collect() }
+                        Expression::Call { ident: call_name, args: args.clone() }
                     )
                 }).collect();
 

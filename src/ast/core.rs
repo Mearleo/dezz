@@ -147,7 +147,10 @@ pub enum Expression {
     List(Vec<Expression>),
 
     // Action Blocks ()->{...actions}
-    ActionBlock(Vec<Expression>),
+    ActionBlock {
+        args: Vec<Expression>,
+        actions: Vec<Expression>,
+    },
 
     // Action Collection (...actions)
     ActionCollection(Vec<Expression>),
@@ -170,8 +173,11 @@ impl Expression {
             Expression::Group(inner) => {
                 inner.walk_mut(f);
             }
-            Expression::ActionBlock(items) => {
-                for item in items {
+            Expression::ActionBlock { args, actions } => {
+                for item in args {
+                    item.walk_mut(f);
+                }
+                for item in actions {
                     item.walk_mut(f);
                 }
             }
@@ -202,9 +208,9 @@ impl Expression {
         let mut expressions: Vec<Expression> = Vec::new();
 
         match self {
-            Expression::ActionBlock(items) => {
+            Expression::ActionBlock { args, actions } => {
                 expressions.extend(
-                    resolve_action_block(items.clone())
+                    resolve_action_block(args.clone(), actions.clone())
                 );
             }
             Expression::Binary { op, left, right } => {

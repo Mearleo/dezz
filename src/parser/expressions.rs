@@ -382,8 +382,48 @@ impl Parser {
                 }
             }
 
-            Some(Token::LeftParen) => { // group or point or action block or action collection
-                if matches!(self.peek(), Some(Token::RightParen)) { //  if action block: ()->{...}
+            Some(Token::LeftParen) => { // group (expr), point (expr, expr), action block (..args)->{...}, action collection (action, action, ...)
+
+                let mut args: Vec<Expression> = Vec::new();
+
+                while !matches!(self.peek(), Some(Token::RightParen)) {
+                    args.push(self.parse_expression());
+
+                    if !matches!(self.peek(), Some(Token::Comma)) {
+                        break;
+                    }
+                    self.next();
+                }
+
+                self.expect(&Token::RightParen);
+                
+                if matches!(args.first(), Some(Expression::Binary { op: BinaryOp::Action, ..})) { // if action collection
+                    return Expression::ActionCollection(args)
+                }
+
+                if matches!(self.peek(), Some(Token::Action)) { // if action block
+                    self.next();
+                    self.expect(&Token::LeftBrace);
+
+                    let mut actions: Vec<Expression> = Vec::new();
+
+                    while !matches!(self.peek(), Some(Token::RightBrace)) {
+                        actions.push(self.parse_expression());
+                    }
+
+                    self.expect(&Token::RightBrace);
+
+                    return Expression::ActionBlock { args, actions }
+                } else { // else point or group
+                    if args.len() == 1 {
+                        return Expression::Group(Box::new(args[0].clone()))
+                    } else if args.len() == 2 {
+                        return Expression::Point(Point { x: Box::new(args[0].clone()), y: Box::new(args[1].clone()) })
+                    } else {
+                        self.token_err("Points can only have two dimensions.")
+                    }
+                }
+                /* if matches!(self.peek(), Some(Token::RightParen)) { //  if action block: ()->{...}
                     self.next();
                     self.expect(&Token::Action);
                     self.expect(&Token::LeftBrace);
@@ -431,7 +471,7 @@ impl Parser {
                         self.expect(&Token::RightParen);
                         Expression::Group(Box::new(expr))
                     }
-                }
+                } */
             }
 
             Some(Token::LeftBrace) => { // conditional
