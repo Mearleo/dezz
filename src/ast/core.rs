@@ -1,8 +1,10 @@
 use serde::Serialize;
-use std::fmt;
+use std::{ fmt };
+
+use crate::ast::action_block::resolve_action_block;
 
 // Whole Desmos Graph
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Graph {
     pub viewport: Option<Viewport>,
     pub ticker: Option<Ticker>,
@@ -10,26 +12,32 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn new() -> Self {
-        Self { viewport: None, ticker: None, items: Vec::new() }
-    }
-
     pub fn simplify(&mut self) {
         for item in &mut self.items {
-            if let Item::Expression(expr) = item {
-                expr.simplify();
-            }
+            item.simplify();
         }
     }
 
     pub fn to_base(&mut self) {
-        
+        let new_items: &mut Vec<Item> = &mut Vec::new();
+
+        for item in self.items.clone() {
+            new_items.extend(item.to_base());
+        }
+
+        self.items = new_items.clone();
+    }
+}
+
+impl Graph {
+    pub fn new() -> Self {
+        Self { viewport: None, ticker: None, items: Vec::new() }
     }
 }
 
 
 // Viewport Settings
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Viewport {
     pub xmin: Expression,
     pub ymin: Expression,
@@ -51,7 +59,7 @@ impl Viewport {
 }
 
 // Ticker
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Ticker {
     pub run: Option<Expression>,
     pub step: Option<Expression>,
@@ -67,11 +75,42 @@ impl Ticker {
 }
 
 // The Cell/Item
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub enum Item {
     Expression(Expression),
     Folder(Folder),
     Note(Note),
+}
+
+impl Item {
+    fn simplify(&mut self) {
+        if let Item::Expression(expr) = self {
+            expr.simplify();
+        }
+    }
+
+    fn to_base(&self) -> Vec<Item> {
+        match self {
+            Item::Note(note) => {
+                vec![Item::Note(note.clone())]
+            }
+            Item::Folder(folder) => {
+                let new_items: &mut Vec<Item> = &mut Vec::new();
+
+                for item in folder.items.clone() {
+                    new_items.extend(item.to_base());
+                }
+
+                vec![
+                    Item::Folder(Folder { title: folder.title.clone(), items: new_items.clone() })
+                ]
+            }
+            Item::Expression(expression) => {
+                // convert Vec<Expression> into Vec<Item>
+                expression.to_base().iter().map(|expr| Item::Expression(expr.clone())).collect()
+            }
+        }
+    }
 }
 
 // item type: Expression
@@ -118,38 +157,111 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn simplify(&mut self) {
+    pub fn walk_mut(&mut self, f: &mut impl FnMut(&mut Expression) -> bool) {
+        if !f(self) {
+            return;
+        }
+
         match self {
-            Expression::Group(inner) => {
-                inner.simplify(); // If the inner expression is also a Group, collapse it
-
-                if let Expression::Group(grandchild) = &mut **inner {
-                    *self = Expression::Group(grandchild.clone());
-                }
+            Expression::Binary { left, right, .. } => {
+                left.walk_mut(f);
+                right.walk_mut(f);
             }
-            Expression::Binary { op, left, right } => {
-                left.simplify();
-                right.simplify();
-
-                if matches!(op, BinaryOp::Div | BinaryOp::Eq) {
-                    if let Expression::Group(inner) = &mut **left {
-                        *left = inner.clone();
-                    }
-                    if let Expression::Group(inner) = &mut **right {
-                        *right = inner.clone();
-                    }
-                } else if matches!(op, BinaryOp::Pow) {
-                    if let Expression::Group(inner) = &mut **right {
-                        *right = inner.clone();
-                    }
+            Expression::Group(inner) => {
+                inner.walk_mut(f);
+            }
+            Expression::ActionBlock(items) => {
+                for item in items {
+                    item.walk_mut(f);
                 }
             }
             Expression::Setting(setting) => {
-                setting.expr.simplify();
-                println!("{:#?}", setting.expr);
+                setting.expr.walk_mut(f);
             }
-            _ => {}
+            Expression::Unary { expr, .. } => {
+                expr.walk_mut(f);
+            }
+            Expression::Call { args, .. } => {
+                for arg in args {
+                    arg.walk_mut(f);
+                }
+            }
+            Expression::Ident(_) => {}
+            Expression::Number(_) => {}
+            other => {
+                println!("{:?}", other);
+                todo!()
+            }
         }
+    }
+}
+
+
+impl Expression {
+    fn to_base(&self) -> Vec<Expression> {
+        let mut expressions: Vec<Expression> = Vec::new();
+
+        match self {
+            Expression::ActionBlock(items) => {
+                expressions.extend(
+                    resolve_action_block(items.clone())
+                );
+            }
+            Expression::Binary { op, left, right } => {
+                let mut left_items = left.to_base().into_iter();
+                let mut right_items = right.to_base().into_iter();
+
+                let left_first = left_items.next().unwrap();
+                let right_first = right_items.next().unwrap();
+
+                expressions.push(Expression::Binary {
+                    op: op.clone(),
+                    left: Box::new(left_first),
+                    right: Box::new(right_first),
+                });
+
+                expressions.extend(left_items);
+                expressions.extend(right_items);
+            }
+            _ => {
+                expressions.push(self.clone());
+            }
+        }
+
+        expressions
+    }
+
+    pub fn simplify(&mut self) {
+        self.walk_mut(&mut |node| {
+            match node {
+                Expression::Group(inner) => {
+                    // Collapse nested groups
+                    if let Expression::Group(grandchild) = &mut **inner {
+                        *node = Expression::Group(grandchild.clone());
+                    }
+                }
+
+                Expression::Binary { op, left, right } => {
+                    // Remove unnecessary groups
+                    if matches!(op, BinaryOp::Div | BinaryOp::Eq) {
+                        if let Expression::Group(inner) = &mut **left {
+                            *left = inner.clone();
+                        }
+                        if let Expression::Group(inner) = &mut **right {
+                            *right = inner.clone();
+                        }
+                    } else if matches!(op, BinaryOp::Pow) {
+                        if let Expression::Group(inner) = &mut **right {
+                            *right = inner.clone();
+                        }
+                    }
+                }
+
+                _ => {}
+            }
+
+            true
+        });
     }
 }
 
@@ -248,9 +360,6 @@ impl fmt::Display for Expression {
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("[{}]", items_str)
-            }
-            Expression::ActionBlock(_) => {
-                todo!()
             }
             _ => panic!("Unexpected display attempt for {:?}", self)
         };
@@ -363,14 +472,14 @@ impl fmt::Display for UnaryOp {
 
 
 // Folder
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Folder {
     pub title: String,
     pub items: Vec<Item>,
 }
 
 // Note
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Note {
     pub text: String,
 }

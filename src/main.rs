@@ -8,7 +8,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
-use lexer::tokenize;
+use lexer::Lexer;
 use parser::Parser;
 use generator::generate;
 use semantic_analysis::analyze;
@@ -18,11 +18,15 @@ fn main() {
     let source = fs::read_to_string(&input_path)
         .expect("Failed to read input file");
 
-    let tokens = tokenize(&source);
+    let lexer = Lexer::new(&source);
+    let tokens = lexer.tokenize();
+
     let mut parser = Parser::new(tokens);
     let mut ast = parser.parse_program();
     ast.simplify();
+    //println!("{:#?}", ast);
     ast.to_base();
+    //println!("{:#?}", ast);
 
 
     let ast = analyze(ast);

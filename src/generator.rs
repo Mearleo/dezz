@@ -124,7 +124,7 @@ impl Expression {
             .replace("[", "\\left[")
             .replace("]", "\\right]")
             .replace("->", "\\to ")
-            .replace("*", "\\cdot")
+            .replace("*", "\\cdot ")
     }
 }
 
