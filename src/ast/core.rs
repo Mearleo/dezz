@@ -181,6 +181,21 @@ impl Expression {
                     item.walk_mut(f);
                 }
             }
+            Expression::ActionCollection(expressions) => {
+                for item in expressions {
+                    item.walk_mut(f);
+                }
+            }
+            Expression::List(expressions) => {
+                for item in expressions {
+                    item.walk_mut(f);
+                }
+            }
+            Expression::Conditional(expressions) => {
+                for item in expressions {
+                    item.walk_mut(f);
+                }
+            }
             Expression::Setting(setting) => {
                 setting.expr.walk_mut(f);
             }
@@ -192,12 +207,12 @@ impl Expression {
                     arg.walk_mut(f);
                 }
             }
+            Expression::Point(point) => {
+                point.x.walk_mut(f);
+                point.y.walk_mut(f);
+            }
             Expression::Ident(_) => {}
             Expression::Number(_) => {}
-            other => {
-                println!("{:?}", other);
-                todo!()
-            }
         }
     }
 }
@@ -307,6 +322,9 @@ impl fmt::Display for Expression {
                     "random" => "\\operatorname{random}".into(),
                     "polygon" => "\\operatorname{polygon}".into(),
                     "rgb" => "\\operatorname{rgb}".into(),
+                    "mod" => "\\operatorname{mod}".into(),
+                    "min" => "\\operatorname{min}".into(),
+                    "max" => "\\operatorname{max}".into(),
                     _ => format!("f_{{{}}}", ident),
                 }.to_string();
 
