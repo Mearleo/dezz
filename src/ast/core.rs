@@ -146,6 +146,9 @@ pub enum Expression {
     // Lists [...]
     List(Vec<Expression>),
 
+    // e. g. for a=[1...3], b=[1...4]
+    BlankList(Vec<Expression>),
+
     // Action Blocks ()->{...actions}
     ActionBlock {
         args: Vec<Expression>,
@@ -187,6 +190,11 @@ impl Expression {
                 }
             }
             Expression::List(expressions) => {
+                for item in expressions {
+                    item.walk_mut(f);
+                }
+            }
+            Expression::BlankList(expressions) => {
                 for item in expressions {
                     item.walk_mut(f);
                 }
@@ -360,22 +368,6 @@ impl fmt::Display for Expression {
                 } else {
                     format!("v_{{{}}}", ident)
                 };
-                /* let ident = match ident.as_str() {
-                    "x" => "x".into(),
-                    "y" => "y".into(),
-                    "pi" => "\\pi".into(),
-                    "tau" => "\\tau".into(),
-                    "e" => "e".into(),
-                    "infty" => "\\infty".into(),
-                    "infinity" => "\\infty".into(),
-                    "r" => "r".into(),
-                    "theta" => "\\theta".into(),
-                    "t" => "t".into(),
-                    "width" => "\\operatorname{width}".into(),
-                    "height" => "\\operatorname{height}".into(),
-                    "dt" => "\\operatorname{dt}".into(),
-                    _ => format!("v_{{{}}}", ident),
-                }.to_string(); */
 
                 ident
             }
@@ -395,6 +387,14 @@ impl fmt::Display for Expression {
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("[{}]", items_str)
+            }
+            Expression::BlankList(items) => {
+                let items_str = items
+                    .iter()
+                    .map(|item| item.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{}", items_str)
             }
             _ => panic!("Unexpected display attempt for {:?}", self)
         };
@@ -465,6 +465,8 @@ pub enum BinaryOp {
     Condition,
     Range,
     Index,
+    For,
+    With,
 }
 
 impl fmt::Display for BinaryOp {
@@ -483,6 +485,8 @@ impl fmt::Display for BinaryOp {
             BinaryOp::Action => "->",
             BinaryOp::Range => "...",
             BinaryOp::Index => "",
+            BinaryOp::For => "\\operatorname{for}",
+            BinaryOp::With => "\\operatorname{with}",
             _ => panic!("Unexpected display request for {:?}", self)
         };
         write!(f, "{}", s)

@@ -92,13 +92,13 @@ impl Parser {
 
     // equality: = | ~
     fn parse_equality(&mut self) -> Expression {
-        let mut expr = self.parse_condition();
+        let mut expr = self.parse_suffixes();
 
         loop {
             match self.peek() {
                 Some(Token::Equal) => {
                     self.next();
-                    let right = self.parse_condition();
+                    let right = self.parse_suffixes();
                     expr = Expression::Binary {
                         op: BinaryOp::Eq,
                         left: Box::new(expr),
@@ -107,7 +107,7 @@ impl Parser {
                 }
                 Some(Token::Tilde) => {
                     self.next();
-                    let right = self.parse_condition();
+                    let right = self.parse_suffixes();
                     expr = Expression::Binary {
                         op: BinaryOp::Regression,
                         left: Box::new(expr),
@@ -115,6 +115,63 @@ impl Parser {
                     };
                 }
                 _ => break,
+            }
+        }
+
+        expr
+    }
+
+    // parse for or with
+    fn parse_suffixes(&mut self) -> Expression {
+        let mut expr = self.parse_condition();
+
+        if let Some(Token::Ident(string)) = self.peek() {
+            match string.as_str() {
+                "_for" => {
+                    self.next();
+
+                    let mut args: Vec<Expression> = Vec::new();
+
+                    loop {
+                        args.push(self.parse_expression());
+
+                        if matches!(self.peek(), Some(Token::Comma)) {
+                            self.next();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    let right = Expression::BlankList(args);
+                    expr = Expression::Binary {
+                        op: BinaryOp::For,
+                        left: Box::new(expr),
+                        right: Box::new(right),
+                    };
+                }
+                "_with" => {
+                    self.next();
+
+                    let mut args: Vec<Expression> = Vec::new();
+
+                    loop {
+                        args.push(self.parse_expression());
+
+                        if matches!(self.peek(), Some(Token::Comma)) {
+                            self.next();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    let right = Expression::BlankList(args);
+                    expr = Expression::Binary {
+                        op: BinaryOp::With,
+                        left: Box::new(expr),
+                        right: Box::new(right),
+                    };
+                }
+                _ => {}
             }
         }
 
