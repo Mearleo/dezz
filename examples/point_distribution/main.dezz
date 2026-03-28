@@ -1,8 +1,8 @@
 @Viewport{ xmin:-3, xmax:3 }
 
 "randoms" {
-    R1=random(n)
-    R2=random(n)*2*pi
+    R1=_random(n)
+    R2=_random(n)*2*_pi
 }
 
 "variables" {
@@ -11,7 +11,7 @@
 }
 
 "visual" {
-    R1^((1+a)/2)*(cos(R2),sin(R2)) @{color: "#000", pointSize: 20, pointOpacity: 0.03}
+    R1^((1+a)/2)*(_cos(R2),_sin(R2)) @{color: "#000", pointSize: 20, pointOpacity: 0.03}
 
     "rings" {
         r=([1...10]/10)^(1+a)

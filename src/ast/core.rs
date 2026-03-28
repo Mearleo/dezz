@@ -304,29 +304,21 @@ impl fmt::Display for Expression {
                     .collect::<Vec<_>>()
                     .join(", ");
 
-                // convert keywords
-                let ident = match ident.as_str() {
-                    "sin" => "\\sin".into(),
-                    "cos" => "\\cos".into(),
-                    "tan" => "\\tan".into(),
-                    "csc" => "\\csc".into(),
-                    "sec" => "\\sec".into(),
-                    "cot" => "\\cot".into(),
-                    "arcsin" => "\\arcsin".into(),
-                    "arccos" => "\\arccos".into(),
-                    "arctan" => "\\arctan".into(),
-                    "arccsc" => "\\arccsc".into(),
-                    "arcsec" => "\\arcsec".into(),
-                    "arccot" => "\\arccot".into(),
-                    "abs" => "\\operatorname{abs}".into(),
-                    "random" => "\\operatorname{random}".into(),
-                    "polygon" => "\\operatorname{polygon}".into(),
-                    "rgb" => "\\operatorname{rgb}".into(),
-                    "mod" => "\\operatorname{mod}".into(),
-                    "min" => "\\operatorname{min}".into(),
-                    "max" => "\\operatorname{max}".into(),
-                    _ => format!("f_{{{}}}", ident),
-                }.to_string();
+                // handle global keywords
+                const LATEX_FUNCS: &[&str] = &[
+                    "sin", "cos", "tan", "cot", "sec", "csc",
+                    "arcsin", "arccos", "arctan", "arccot", "arcsec", "arccsc",
+                ];
+
+                let ident = if let Some(rest) = ident.strip_prefix('_') {
+                    if LATEX_FUNCS.contains(&rest) {
+                        format!("\\{}", rest)
+                    } else {
+                        format!("\\operatorname{{{}}}", rest)
+                    }
+                } else {
+                    format!("f_{{{}}}", ident)
+                };
 
                 format!("{}({})", ident, args_str)
             }
@@ -348,8 +340,27 @@ impl fmt::Display for Expression {
                 format!("{}", actions)
             }
             Expression::Ident(ident) => {
-                // convert keywords (important!)
-                let ident = match ident.as_str() {
+                // handle global keywords
+                const UNCHANGED: &[&str] = &[
+                    "x", "y", "r", "t", "e",
+                ];
+                const OPERATOR_NAMES: &[&str] = &[
+                    "width", "height", "dt",
+                ];
+
+                let ident = if let Some(rest) = ident.strip_prefix('_') {
+                    if UNCHANGED.contains(&rest) {
+                        rest.to_string()
+                    }
+                    else if OPERATOR_NAMES.contains(&rest) {
+                        format!("\\operatorname{{{}}}", rest)
+                    } else {
+                        format!("\\{}", rest)
+                    }
+                } else {
+                    format!("v_{{{}}}", ident)
+                };
+                /* let ident = match ident.as_str() {
                     "x" => "x".into(),
                     "y" => "y".into(),
                     "pi" => "\\pi".into(),
@@ -364,7 +375,7 @@ impl fmt::Display for Expression {
                     "height" => "\\operatorname{height}".into(),
                     "dt" => "\\operatorname{dt}".into(),
                     _ => format!("v_{{{}}}", ident),
-                }.to_string();
+                }.to_string(); */
 
                 ident
             }

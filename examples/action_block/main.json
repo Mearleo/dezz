@@ -1,0 +1,71 @@
+{
+  "doNotMigrateMovablePointStyle": true,
+  "expressions": {
+    "list": [
+      {
+        "id": "1",
+        "latex": "v_{pos}=1",
+        "type": "expression"
+      },
+      {
+        "id": "2",
+        "latex": "v_{vel}=0",
+        "type": "expression"
+      },
+      {
+        "id": "3",
+        "latex": "v_{force}=0",
+        "type": "expression"
+      },
+      {
+        "id": "4",
+        "latex": "f_{R}\\left(v_{d}\\right)=v_{force}\\to f_{0force}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right), v_{vel}\\to f_{1vel}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right), v_{pos}\\to f_{2pos}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right)",
+        "type": "expression"
+      },
+      {
+        "id": "5",
+        "latex": "f_{0force}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right)=-v_{pos}",
+        "type": "expression"
+      },
+      {
+        "id": "6",
+        "latex": "f_{1vel}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right)=v_{vel}+f_{0force}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right)\\cdot v_{d}",
+        "type": "expression"
+      },
+      {
+        "id": "7",
+        "latex": "f_{2pos}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right)=v_{pos}+f_{1vel}\\left(v_{d}, v_{force}, v_{vel}, v_{pos}\\right)\\cdot v_{d}",
+        "type": "expression"
+      },
+      {
+        "id": "8",
+        "latex": "\\left(v_{pos},0\\right)",
+        "type": "expression"
+      }
+    ],
+    "ticker": {
+      "handlerLatex": "f_{R}(\\frac{\\operatorname{dt}}{1000})",
+      "open": true
+    }
+  },
+  "graph": {
+    "__v12ViewportLatexStash": {
+      "xmax": "10",
+      "xmin": "-10",
+      "ymax": "10",
+      "ymin": "-10"
+    },
+    "complex": false,
+    "viewport": {
+      "xmax": "10",
+      "xmin": "-10",
+      "ymax": "10",
+      "ymin": "-10"
+    },
+    "xAxisArrowMode": "POSITIVE",
+    "yAxisArrowMode": "POSITIVE"
+  },
+  "includeFunctionParametersInRandomSeed": true,
+  "randomSeed": "8bc6db9edd77f61bb7f2b455cd3ef0c5",
+  "version": 11
+}

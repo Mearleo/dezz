@@ -17,7 +17,7 @@
       {
         "folderId": "1",
         "id": "3",
-        "latex": "v_{R2}=\\operatorname{random}\\left(v_{n}\\right)\\cdot2\\cdot\\pi",
+        "latex": "v_{R2}=\\operatorname{random}\\left(v_{n}\\right)\\cdot 2\\cdot \\pi",
         "type": "expression"
       },
       {
@@ -63,7 +63,7 @@
         "color": "#000",
         "folderId": "7",
         "id": "8",
-        "latex": "v_{R1}^{\\left(\\frac{\\left(1+v_{a}\\right)}{2}\\right)}\\cdot\\left(\\cos\\left(v_{R2}\\right),\\sin\\left(v_{R2}\\right)\\right)",
+        "latex": "v_{R1}^{\\left(\\frac{\\left(1+v_{a}\\right)}{2}\\right)}\\cdot \\left(\\cos\\left(v_{R2}\\right),\\sin\\left(v_{R2}\\right)\\right)",
         "pointOpacity": "0.03",
         "pointSize": "20",
         "type": "expression"
@@ -78,7 +78,7 @@
         "color": "#44B",
         "folderId": "9",
         "id": "10",
-        "latex": "r=\\left(\\frac{\\left[1...10\\right]}{10}\\right)^{\\left(1+v_{a}\\right)}",
+        "latex": "v_{r}=\\left(\\frac{\\left[1...10\\right]}{10}\\right)^{\\left(1+v_{a}\\right)}",
         "lineOpacity": "0.5",
         "lineWidth": "1",
         "type": "expression"

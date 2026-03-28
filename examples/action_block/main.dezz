@@ -1,0 +1,15 @@
+@Ticker{
+    run: R(dt/1000),
+}
+
+pos = 1
+vel = 0
+force = 0
+
+R(d)=(d)->{
+    force -> -pos
+    vel -> vel + force * d
+    pos -> pos + vel * d
+}
+
+(pos, 0)

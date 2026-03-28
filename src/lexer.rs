@@ -224,7 +224,6 @@ impl<'a> Lexer<'a> {
 
                     self.push(Token::String(string));
                 }
-
                 '0'..='9' => {
                     let mut num = String::new();
                     while let Some(&d) = self.peek() {
@@ -251,7 +250,7 @@ impl<'a> Lexer<'a> {
                     }
                     self.push(Token::Number(num.parse().unwrap()));
                 }
-                'a'..='z' | 'A'..='Z' => {
+                'a'..='z' | 'A'..='Z' | '_' => {
                     let mut ident = String::new();
                     while let Some(&d) = self.peek() {
                         if d.is_alphanumeric() || d == '_' {
